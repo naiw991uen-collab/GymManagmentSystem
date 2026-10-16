@@ -1,6 +1,5 @@
 <Solution>
-  <Folder Name="/Solution Items/">
-    <File Path="README.md" />
-  </Folder>
-  <Project Path="GymManagmentSystem.MVC/GymManagmentSystem.MVC.csproj" />
+  <Project Path="GymManagmentSystem.BLL/GymManagmentSystem.BLL.csproj" Id="ca28fe9f-d0bb-47d4-af38-7b95ecb95d87" />
+  <Project Path="GymManagmentSystem.DAL/GymManagmentSystem.DAL.csproj" Id="2441154d-af55-4bf8-a035-e3be286521ea" />
+  <Project Path="GymManagmentSystem.MVC/GymManagmentSystem.PL.csproj" />
 </Solution>
