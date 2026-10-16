@@ -1,9 +1,12 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Power Fitness</title>
+    <title>Power Fitness |  @ViewData["Title"] </title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -34,26 +37,32 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav m-auto mb-2 mb-lg-0 mt-3 mt-lg-0">
                         <li class="nav-item">
-                            <!-- تم إعطاء كلاس active لزر Home هنا -->
-                            <a class="nav-link active px-3 py-2 mx-2 fw-bolder fs-5" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link @(currentController == "Home" ? "active" : "") px-3 py-2 mx-2 fw-bolder fs-5"
+                               asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link px-3 py-2 mx-2 fw-bolder fs-5" asp-controller="Members" asp-action="Index">Members</a>
+                            <a class="nav-link @(currentController == "Members" ? "active" : "") px-3 py-2 mx-2 fw-bolder fs-5"
+                               asp-controller="Members" asp-action="Index">Members</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link px-3 py-2 mx-2 fw-bolder fs-5" asp-controller="Trainers" asp-action="Index">Trainers</a>
+                            <a class="nav-link @(currentController == "Trainers" ? "active" : "") px-3 py-2 mx-2 fw-bolder fs-5"
+                               asp-controller="Trainers" asp-action="Index">Trainers</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link px-3 py-2 mx-2 fw-bolder fs-5" asp-controller="Sessions" asp-action="Index">Sessions</a>
+                            <a class="nav-link @(currentController == "Sessions" ? "active" : "") px-3 py-2 mx-2 fw-bolder fs-5"
+                               asp-controller="Sessions" asp-action="Index">Sessions</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link px-3 py-2 mx-2 fw-bolder fs-5" asp-controller="Plans" asp-action="Index">Plans</a>
+                            <a class="nav-link @(currentController == "Plans" ? "active" : "") px-3 py-2 mx-2 fw-bolder fs-5"
+                               asp-controller="Plans" asp-action="Index">Plans</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link px-3 py-2 mx-2 fw-bolder fs-5" asp-controller="Memberships" asp-action="Index">Memberships</a>
+                            <a class="nav-link @(currentController == "Memberships" ? "active" : "") px-3 py-2 mx-2 fw-bolder fs-5"
+                               asp-controller="Memberships" asp-action="Index">Memberships</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link px-3 py-2 mx-2 fw-bolder fs-5" asp-controller="Schedule" asp-action="Index">Sessions Schedule</a>
+                            <a class="nav-link @(currentController == "Schedule" ? "active" : "") px-3 py-2 mx-2 fw-bolder fs-5"
+                               asp-controller="Schedule" asp-action="Index">Sessions Schedule</a>
                         </li>
                         <li class="nav-item">
                             <form asp-action="Logout" asp-controller="Account" method="post" class="d-inline">
