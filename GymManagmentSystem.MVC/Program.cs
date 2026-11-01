@@ -1,40 +1,48 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using GymManagmentSystem.BLL.Services.Members.Classes;
-using GymManagmentSystem.BLL.Services.Members.Interfaces;
+using GymManagmentSystem.BLL.Extentions.DependencyEnjection;
 using GymManagmentSystem.BLL.Services.Members.Validators;
-using GymManagmentSystem.BLL.Services.Plansa.Classes;
-using GymManagmentSystem.BLL.Services.Plansa.Interfaces;
+using GymManagmentSystem.DAL.Applications;
 using GymManagmentSystem.DAL.Contexts;
-using GymManagmentSystem.DAL.Repositories.Classes;
-using GymManagmentSystem.DAL.Repositories.Interfaces;
-using Microsoft.EntityFrameworkCore;
-
+using GymManagmentSystem.DAL.Extentions.DependencyEnjection;
+using GymManagmentSystem.PL.Extentions;
+using GymManagmentSystem.PL.Extentions.Logging;
+using GymManagmentSystem.PL.Hubs.Class;
+using GymManagmentSystem.PL.Hubs.Interface;
+using Microsoft.AspNetCore.Identity;
 
 // Add services to the container.
 var builder = WebApplication.CreateBuilder(args);
 
+// Logging
+builder.AddSerilogLogging();
+
+// MVC
 builder.Services.AddControllersWithViews();
+
+// Serial R
+builder.Services.AddSignalR();
 
 // Fluent Validation
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateMemberViewModelValidator>();
 
+// Layers
+builder.Services.AddDataAccessLayer(builder.Configuration);
+builder.Services.AddBusinessLogicLayer();
+builder.Services.AddScoped<IDashboardNotifier, DashboardNotifier>();
 
-builder.Services.AddDbContext<GymDbContext>(options =>
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(config =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
-
-// Allow Dependency Enjiction
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IMemberService, MemberService>();
-builder.Services.AddScoped<IMemberRepository, MemberRepository>();
-builder.Services.AddScoped<IPlanService, PlanService>();
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+    config.User.RequireUniqueEmail = true;
+    config.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(2);
+    config.Lockout.MaxFailedAccessAttempts = 5;
+}).AddEntityFrameworkStores<GymDbContext>();
 
 var app = builder.Build();
+
+await app.SeedDataAndApplyPendingMigrations();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -47,14 +55,16 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=Account}/{action=Login}/{id?}")
     .WithStaticAssets();
 
+app.MapHub<DashboardHub>("/hubs/dashboard");
 
 app.Run();

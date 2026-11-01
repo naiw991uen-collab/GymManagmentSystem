@@ -51,10 +51,20 @@
                             {
                                 <tr>
                                     <td>
-                                        <span class="avatar">
-                                            <img src="~/images/User.jpg" alt="Default Avatar" class="rounded-circle"
-                                                 style="width: 40px; height: 40px;" />
-                                        </span>
+                                        @if(string.IsNullOrWhiteSpace(member.Photo))
+                                        {
+                                            <span class="avatar">
+                                                <img src="~/images/Ellipse 7.jpg" alt="Default Avatar" class="rounded-circle"
+                                                     style="width: 40px; height: 40px;" />
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="avatar">
+                                                <img src="@Url.Action("Picture", "Members",new {id = member.Id})" alt="Default Avatar" class="rounded-circle"
+                                                     style="width: 40px; height: 40px;" />
+                                            </span>
+                                        }
                                     </td>
                                     <td><span>@member.Name</span></td>
                                     <td><span>@member.Email</span></td>

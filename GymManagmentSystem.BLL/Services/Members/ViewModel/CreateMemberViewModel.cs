@@ -1,8 +1,10 @@
 ﻿using GymManagmentSystem.DAL.Models.Enums;
+using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 namespace GymManagmentSystem.BLL.Services.Members.ViewModel;
 public class CreateMemberViewModel
 {
+    public IFormFile PhotoFile { get; set; } = default!;
     public string Name { get; set; } = default!;
     public string Email { get; set; } = default!;
     public string Phone { get; set; } = default!;

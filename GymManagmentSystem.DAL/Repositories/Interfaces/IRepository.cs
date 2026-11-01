@@ -1,11 +1,24 @@
 ﻿using GymManagmentSystem.DAL.Models;
+using System.Linq.Expressions;
 
 namespace GymManagmentSystem.DAL.Repositories.Interfaces;
-public interface IRepository<TEntity> where TEntity : BaseEntity , new()
+
+public interface IRepository<TEntity> where TEntity : BaseEntity, new()
 {
-    public Task<IEnumerable<TEntity>> GetAllAsync(bool tracking = false);
-    public Task<TEntity?> GetByIdAsync(int id);
-    public Task AddAsync(TEntity entity);
-    public Task UpdateAsync(TEntity entity);
-    public Task DeleteAsync(TEntity entity);
+    Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? predicate = null,
+                                           bool tracking = false,
+                                           CancellationToken ct = default);
+
+    Task<TEntity?> GetByIdAsync(int id, CancellationToken ct = default);
+
+    Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate,
+                                       bool tracking = false,
+                                       CancellationToken ct = default);
+
+    Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken ct = default);
+    Task<int> CountAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken ct = default);
+
+    Task AddAsync(TEntity entity);
+    Task UpdateAsync(TEntity entity);
+    Task DeleteAsync(TEntity entity);
 }
