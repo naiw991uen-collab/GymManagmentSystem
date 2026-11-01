@@ -6,6 +6,9 @@ public class CreateMemberViewModelValidator : AbstractValidator<CreateMemberView
 {
      public CreateMemberViewModelValidator()
     {
+        RuleFor(x => x.PhotoFile)
+            .NotNull()
+            .WithMessage("Photo Is Required");
         RuleFor(x => x.Name)
             .Cascade(CascadeMode.Stop)
             .NotEmpty().WithMessage("Name Is Required")

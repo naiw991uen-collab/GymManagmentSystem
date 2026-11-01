@@ -1,4 +1,5 @@
-﻿@{
+﻿@model AnalyticViewModel
+@{
     ViewData["Title"] = "Home";
 }
 <div class="container">
@@ -26,40 +27,39 @@
                                 <div class="row g-0">
                                     <div class="col-4">
                                         <div class="stat">
-                                            <span class="fw-bolder fs-5 d-block mb-1">100</span>
-                                            <h3 class="fs-5 fw-normal">Total Members</h3>
+                                    <span id="totalMembers" class="fw-bolder fs-5 d-block mb-1">@Model.TotalMembers</span>
+                                    <h3 class="fs-5 fw-normal">Total Members</h3>
                                         </div>
                                     </div>
                                     <div class="col-4">
                                         <div class="stat">
-                                            <span class="fw-bolder fs-5 d-block mb-1">85</span>
-                                            <h3 class="fs-5 fw-normal">Active Members</h3>
+                                    <span id="activeMembers" class="fw-bolder fs-5 d-block mb-1">@Model.ActiveMembers</span>
+                                    <h3 class="fs-5 fw-normal">Active Members</h3>
                                         </div>
                                     </div>
                                     <div class="col-4">
                                         <div class="stat">
-                                            <span class="fw-bolder fs-5 d-block mb-1">20</span>
-                                            <h3 class="fs-5 fw-normal">Trainers</h3>
+                                    <span id="totalTrainers" class="fw-bolder fs-5 d-block mb-1">@Model.TotalTrainers</span>
+                                    <h3 class="fs-5 fw-normal">Trainers</h3>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row g-0">
                                     <div class="col-4">
                                         <div class="stat">
-                                            <span class="fw-bolder fs-5 d-block mb-1">3</span>
-                                            <h3 class="fs-5 fw-normal">Upcoming Sessions</h3>
+                                    <span id="upcomingSessions" class="fw-bolder fs-5 d-block mb-1">@Model.UpcomingSessions</span>
+                                    <h3 class="fs-5 fw-normal">Upcoming Sessions</h3>
                                         </div>
                                     </div>
                                     <div class="col-4">
                                         <div class="stat">
-                                            <span class="fw-bolder fs-5 d-block mb-1">5</span>
-                                            <h3 class="fs-5 fw-normal">Ongoing Sessions</h3>
+                                    <span id="ongoingSessions" class="fw-bolder fs-5 d-block mb-1">@Model.OngoingSessions</span>
+                                    <h3 class="fs-5 fw-normal">Ongoing Sessions</h3>
                                         </div>
                                     </div>
                                     <div class="col-4">
                                         <div class="stat">
-                                            <span class="fw-bolder fs-5 d-block mb-1">20</span>
-                                            <h3 class="fs-5 fw-normal">Completed Sessions</h3>
+                                    <span id="completedSessions" class="fw-bolder fs-5 d-block mb-1">@Model.CompletedSessions</span>                                            <h3 class="fs-5 fw-normal">Completed Sessions</h3>
                                         </div>
                                     </div>
                                 </div>
@@ -408,3 +408,23 @@
 
             </main>
         </div>
+@section Scripts {
+    <script src="~/lib/signalr/dist/browser/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/hubs/dashboard")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("UpdateStats", function(stats) {
+            document.getElementById("totalMembers").textContent = stats.totalMembers;
+            document.getElementById("activeMembers").textContent = stats.activeMembers;
+            document.getElementById("totalTrainers").textContent = stats.totalTrainers;
+            document.getElementById("upcomingSessions").textContent = stats.upcomingSessions;
+            document.getElementById("ongoingSessions").textContent = stats.ongoingSessions;
+            document.getElementById("completedSessions").textContent = stats.completedSessions;
+        });
+
+        connection.start().catch(err => console.error(err));
+    </script>
+}

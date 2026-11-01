@@ -1,23 +1,42 @@
 ﻿using FluentValidation;
+using GymManagmentSystem.BLL.Services.Attachment.Interface;
 using GymManagmentSystem.BLL.Services.Members.Classes;
 using GymManagmentSystem.BLL.Services.Members.Interfaces;
 using GymManagmentSystem.BLL.Services.Members.ViewModel;
+using GymManagmentSystem.MVC.Controllers;
+using GymManagmentSystem.PL.Hubs.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GymManagmentSystem.PL.Controllers;
+
+[Authorize(Roles = "SuperAdmin")]
 public class MembersController : Controller
 {
     private readonly IMemberService _memberService;
      private readonly IValidator<CreateMemberViewModel> _validator;
-    public MembersController(IMemberService memberService, IValidator<CreateMemberViewModel> validator)
+    private readonly IAttachmentService _attachmentService;
+    private readonly IDashboardNotifier _dashboardNotifier;
+    public MembersController(IMemberService memberService, IValidator<CreateMemberViewModel> validator, IDashboardNotifier dashboardNotifier, IAttachmentService attachmentService)
     {
         _memberService = memberService;
         _validator = validator;
+        _dashboardNotifier = dashboardNotifier;
+        _attachmentService = attachmentService;
     }
     public async Task<IActionResult> Index()
     {
-        var members = await _memberService.GetMembersAsyn();
-        return View(members);
+        var result = await _memberService.GetMembersAsyn();
+
+        if(result.Success)
+        {
+            return View(result.Value);
+        }
+        else
+        {
+            return RedirectToAction(nameof(Index), nameof(HomeController));
+        }
+        
     }
 
     //[HttpGet]
@@ -34,73 +53,89 @@ public class MembersController : Controller
 
         var result = await _memberService.AddMemberAsync(model);
 
-        if (result)
+        if (result.Success)
         {
+            await _dashboardNotifier.NotifyStatsChangedAsync();
             TempData["SuccessMessage"] = "Member Created Successfully";
             return RedirectToAction(nameof(Index));
         }
         else
         {
-            TempData["ErrorMessage"] = "Member Failed To Create";
+            TempData["ErrorMessage"] = result.Error;
             return View(nameof(Create), model);
         }
     }
 
+    public async Task<IActionResult> Picture(int Id)
+    {
+        var result = await _memberService.GetMemberAsync(Id);
+
+        if (!result.Success || string.IsNullOrWhiteSpace(result.Value?.Photo))
+            return NotFound();
+
+        var file = _attachmentService.GetFile(result.Value.Photo, "MemberPhotos");
+
+        if (!file.Success || file.Value == null)
+            return NotFound();
+
+        return File(file.Value.Stream, file.Value.ContentType);
+    }
     public async Task<IActionResult> MemberDetails(int? Id)
     {
-        var member = await _memberService.GetMemberAsync(Id);
+        var result = await _memberService.GetMemberAsync(Id);
 
-        if(member == null)
+        if(!result.Success)
         {
-            TempData["ErrorMessage"] = "Member Not Found";
+            TempData["ErrorMessage"] = result.Error;
             return RedirectToAction(nameof(Index));
         }
 
-        return View(member);
+        return View(result.Value);
     }
 
     public async Task<IActionResult> HealthRecordDetails(int? Id)
     {
-        var model = await _memberService.GetHealthRecordAsync(Id);
+        var result = await _memberService.GetHealthRecordAsync(Id);
 
-        if (model == null)
+        if (!result.Success)
         {
-            TempData["ErrorMessage"] = "HealthRecord Not Found";
+            TempData["ErrorMessage"] = result.Error;
             return RedirectToAction(nameof(Index));
         }
 
-        return View(model);
+        return View(result.Value);
     }
 
     public async Task<IActionResult> EditMember(int? Id)
     {
-        var member = await _memberService.GetMemberToUpdateAsync(Id);
+        var result = await _memberService.GetMemberToUpdateAsync(Id);
 
-        if (member == null)
+        if (!result.Success)
         {
-            TempData["ErrorMessage"] = "Member Not Found";
+            TempData["ErrorMessage"] = result.Error;
             return RedirectToAction(nameof(Index));
         }
-        return View(member);
+        return View(result.Value);
     }
 
     [HttpPost]
     public async Task<IActionResult> EditMember(MemberToUpdateViewModel model)
     {
         if (!ModelState.IsValid)
-            return View(nameof(Create), model);
+            return View(model);
 
         var result = await _memberService.UpdateMemberAsync(model);
 
-        if (result)
+        if (result.Success)
         {
+            await _dashboardNotifier.NotifyStatsChangedAsync();
             TempData["SuccessMessage"] = "Member Updated Successfully";
             return RedirectToAction(nameof(Index));
         }
         else
         {
-            TempData["ErrorMessage"] = "Member Failed To Update";
-            return View(nameof(Create), model);
+            TempData["ErrorMessage"] = result.Error;
+            return View(model);
         }
     }
 
@@ -114,14 +149,16 @@ public class MembersController : Controller
     {
         var result = await _memberService.DeleteMemberAsync(Id);
 
-        if (result)
+        if (result.Success)
         {
+            await _dashboardNotifier.NotifyStatsChangedAsync();
             TempData["SuccessMessage"] = "Member Deleted Successfully";
             return RedirectToAction(nameof(Index));
         }
         else
         {
-            TempData["ErrorMessage"] = "Member Failed To Delete";
+            TempData["ErrorMessage"] = result.Error;
+
             return View(Id);
         }
     }

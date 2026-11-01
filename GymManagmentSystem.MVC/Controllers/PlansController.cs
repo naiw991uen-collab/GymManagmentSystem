@@ -2,31 +2,34 @@
 using GymManagmentSystem.BLL.Services.Plansa.ViewModel;
 using GymManagmentSystem.DAL.Models;
 using GymManagmentSystem.DAL.Repositories.Interfaces;
-using Microsoft.AspNetCore.Http.HttpResults;
+using GymManagmentSystem.PL.Hubs.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace GymManagmentSystem.MVC.Controllers;
+
+[Authorize]
 public class PlansController : Controller
 {
-    private async Task<IActionResult> ReturnViewWithNameAsync(EditPlanViewModel model)
-    {
-        var original = await _planService.GetPlanAsync(model.Id);
-        model.PlanName = original?.PlanName ?? string.Empty;
-        return View(model);
-    }
     private IRepository<Plan> _planRepository;
-    private readonly IPlanService _planService ;
-    public PlansController(IRepository<Plan> planRepository, IPlanService planService)
+    private readonly IPlanService _planService;
+    private readonly IDashboardNotifier _dashboardNotifier;
+    public PlansController(IRepository<Plan> planRepository, IPlanService planService, IDashboardNotifier dashboardNotifier)
     {
         _planRepository = planRepository;
         _planService = planService;
+        _dashboardNotifier = dashboardNotifier;
     }
-
+    private async Task<IActionResult> ReturnViewWithNameAsync(EditPlanViewModel model)
+    {
+        var original = await _planService.GetPlanAsync(model.Id);
+        model.PlanName = original.Success ? original.Value!.PlanName : string.Empty;
+        return View(model);
+    }
     public async Task<IActionResult> Index()
     {
         var plans = await _planRepository.GetAllAsync();
         return View(plans);
     }
-
     public async Task<IActionResult> Details(int id)
     {
         var plan = await _planRepository.GetByIdAsync(id);
@@ -36,16 +39,15 @@ public class PlansController : Controller
         else
             return View(plan);
     }
-
     public async Task<IActionResult> Edit(int id)
     {
-        var plan = await _planService.GetPlanAsync(id);
-        if (plan == null)
+        var result = await _planService.GetPlanAsync(id);
+        if (!result.Success)
         {
-            TempData["ErrorMessage"] = "Plan Not Found";
+            TempData["ErrorMessage"] = result.Error;
             return RedirectToAction(nameof(Index));
         }
-        return View(plan);
+        return View(result.Value);
     }
 
     [HttpPost]
@@ -56,14 +58,17 @@ public class PlansController : Controller
 
         var result = await _planService.UpdatePlanAsync(model);
 
-        if (result)
+        if (result.Success)
         {
+            await _dashboardNotifier.NotifyStatsChangedAsync();
             TempData["SuccessMessage"] = "Plan Updated Successfully";
             return RedirectToAction(nameof(Index));
         }
-
-        ModelState.AddModelError(string.Empty, "Plan Failed To Update");
-        return await ReturnViewWithNameAsync(model);
+        else
+        {
+            TempData["ErrorMessage"] = result.Error;
+            return await ReturnViewWithNameAsync(model);
+        }
     }
 
     [HttpPost]
@@ -71,17 +76,16 @@ public class PlansController : Controller
     {
         var result = await _planService.DeactivateMemberAsync(id);
 
-        if (result)
+        if (result.Success)
         {
+            await _dashboardNotifier.NotifyStatsChangedAsync();
             TempData["SuccessMessage"] = wasActive
                 ? "Plan Deactivated Successfully"
                 : "Plan Activated Successfully";
         }
         else
         {
-            TempData["ErrorMessage"] = wasActive
-                ? "Plan Failed To Deactivate"
-                : "Plan Failed To Activate";
+            TempData["ErrorMessage"] = result.Error;
         }
 
         return RedirectToAction(nameof(Index));

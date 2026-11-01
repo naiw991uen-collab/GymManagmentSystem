@@ -5,16 +5,24 @@ namespace GymManagmentSystem.DAL.Repositories.Classes;
 public class UnitOfWork : IUnitOfWork
 {
     private readonly GymDbContext _dbContext;
-    public IMemberRepository memberRepository { get; set; }
-    public UnitOfWork(GymDbContext dbContext, IMemberRepository memberRepository)
+    public IMemberRepository memberRepository { get; }
+    public ITrainerRepository TrainerRepository { get; }
+
+    public ISessionRepository SessionRepository { get; }
+    public IMemberShipRepository MemberShipRepository { get; }
+
+    public IBookingRepository BookingRepository { get; }
+
+    public UnitOfWork(GymDbContext dbContext, IMemberRepository memberRepository, ITrainerRepository trainerRepository, ISessionRepository sessionRepository, IMemberShipRepository memberShipRepository, IBookingRepository bookingRepository)
     {
         _dbContext = dbContext;
         this.memberRepository = memberRepository;
+        this.TrainerRepository = trainerRepository;
+        SessionRepository = sessionRepository;
+        MemberShipRepository = memberShipRepository;
+        BookingRepository = bookingRepository;
     }
     private Dictionary<string,object> Repos = [];
-
-    
-
 
     public IRepository<TEntity> GetRepository<TEntity>() where TEntity : BaseEntity, new()
     {
